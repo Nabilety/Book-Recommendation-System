@@ -78,3 +78,35 @@ print(books_titles.head())
 print(books_titles[books_titles["book_id"].isin(top_recs)])
 
 # the issues that arises now is that above recommendations are very very popular books
+# meaning, not a lot of difference between most popular books in general and the ones we got recommended
+# we need a way to select books that are more popular in our set, differentiating us from generic books.
+# We will look at what books they liked and not necessarily popular among all users.
+
+# Instead of top_recs we will look at all recommendations
+all_recs = recs["book_id"].value_counts()
+all_recs = all_recs.to_frame().reset_index() # here our columns are incorrect: book_id counts how many times each book appeared among the recommendations. Index is the actual book_id.
+all_recs.columns = ["book_id", "book_count"]
+
+# we're gonna merge with books titles with inner merge. Meaning if the data does not exist in both. We get rid of the row
+all_recs = all_recs.merge(books_titles, how="inner", on="book_id")
+
+# Now we create a score to sort the recommendations.
+# So of all the users, who liked books we liked. How many of them also like this book.
+# We then penalize this based on how popular the book was in the general set.
+
+# If a book is very popular in our set, and less popular on goodreads. It's gonna have highly recommended.
+# meaning we're looking for books that are popular among users like us but aren't popular in general
+all_recs["score"] = all_recs["book_count"] * (all_recs["book_count"] / all_recs["ratings"])
+all_recs.sort_values("score", ascending=False).head(10)
+
+# Now we filter out books with few ratings, and accept only ratings above 75
+popular_recs = all_recs[all_recs["book_count"] > 75].sort_values("score", ascending=False)
+
+def make_clickable(val):
+    return '<a target="_blank" href="{}">Goodreads</a>'.format(val)
+
+# Style to show the cover image
+def show_image(val):
+    return '<img src={}" width=50></img>'.format(val)
+
+popular_recs[~popular_recs["book_id"].isin(liked_books)].head(10).style.format({'url': make_clickable, 'cover_image': show_image})
