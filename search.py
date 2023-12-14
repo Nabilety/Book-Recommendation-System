@@ -66,6 +66,14 @@ vectorizer = TfidfVectorizer()
 
 tfidf = vectorizer.fit_transform(titles["mod_title"])
 
+# Style column to build hyperlink html element for each of the column entries
+def make_clickable(val):
+    return '<a target="_blank" href="{}">Goodreads</a>'.format(val)
+
+# Style to show the cover image
+def show_image(val):
+    return '<img src={}" width=50></img>'.format(val)
+
 # Build code to turn search query into vector and match against our matrix
 def search(query, vectorizer):
     #query = "fire upon the deep" # query
@@ -76,7 +84,11 @@ def search(query, vectorizer):
     results = titles.iloc[indices]
     results = results.sort_values("ratings", ascending=False) # incase of duplicate titles, take the rows with highest ratings
     return  results.head(5)
+    #return results.head(5).style.format({'url': make_clickable, 'cover_image': show_image})
+    #return results.head(5).style.format({'url': make_clickable})
 
-print(search("East of Eden", vectorizer))
+print(search("Homegoing", vectorizer))
 
 #Create a list of liked books
+#liked_books = ["8132407", "31147619", "29983711"]
+#liked_books = ["4408", "31147619", "29983711", "94013317", "9317691", "8153988", "20494944"]
